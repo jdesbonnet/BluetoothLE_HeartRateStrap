@@ -22,20 +22,21 @@ TIMEOUT=10
 
 # File descriptor used for pipe
 FD=7
-FIFO=/tmp/hr_fifo
+
+# FIFO file: add BTADDR to faciliate more than one instance of the script running
+FIFO=/tmp/hr_fifo_$$
+
+echo "FIFO=$FIFO"
 
 # Create a FIFO pipe
 mknod $FIFO p
 
-# Remove FIFO pipe on script exit
-trap "rm $FIFO" EXIT
-
 # Assign this pipe to file handle 7
 exec 7<>${FIFO}
 
-# Kill all subprocesses on exit
+# Kill all subprocesses and delete FIFO on exit
 # http://stackoverflow.com/questions/360201/kill-background-process-when-shell-script-exit
-trap "trap - SIGTERM && kill -- -$$" SIGINT SIGTERM EXIT
+trap "rm $FIFO ; trap - SIGTERM && kill -- -$$ ; " SIGINT SIGTERM EXIT
 
 # Loop forever
 while true ; do 
